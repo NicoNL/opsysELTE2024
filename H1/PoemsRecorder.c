@@ -213,7 +213,7 @@ void modifyPoem(){
     }
 }
 
-//This method takes a boolean to print or not the enumaration of the Lines and it returns an int to return
+//This method takes a boolean to print or not the enumeration of the Lines and it returns an int to return
 //the amount of lines in the file
 int printPoem(bool number){
     FILE *Poems = fopen(FILENAME,"r");
