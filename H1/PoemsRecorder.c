@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #define MAX_BUFFER 1000
+#define FILENAME "Poems.txt"
 
 void Menu();
 void pressEnter();
@@ -17,16 +18,26 @@ int main(){
     return 0;
 }
 
+//Program Menu
 void Menu(){
     int x = 0;
     char input[20];
-    FILE *Poems = fopen("Poems.txt","r");
+    FILE *Poems = fopen(FILENAME,"r");
     if(Poems == NULL){
-        printf("The file 'Poems.txt' is not in this folder, please create this file to save the poems.\n");
-        exit(1);
+        printf("The file 'Poems.txt' is not in this folder, a new empty 'Poems.txt' file will be created\n");
+        FILE *Poems = fopen(FILENAME,"w");
+        if(Poems == NULL){
+            printf("Error while opening file\n");
+            exit(1);
+        }
+        fclose(Poems);
+        pressEnter();
+    }else{
+        fclose(Poems);
     }
-    fclose(Poems);
+
     do{
+        system("clear");
         printf("Welcome to the Watering Poems Manager\nPlease enter a number to choose the corresponding option:\n");
         printf("1.Add a new Poem\n2.Remove a Poem\n3.Modify an existing Poem\n4.Print Poems\nEnter 'exit' to leave\n\n");
         fgets(input,sizeof(input),stdin);
@@ -41,30 +52,26 @@ void Menu(){
             {
             case 1:
                 addPoem();
-                x=0;
                 pressEnter();
                 break;
             case 2:
                 removePoem();
-                x=0;
                 pressEnter();
                 break;
             case 3:
                 modifyPoem();
-                x=0;
                 pressEnter();
                 break;
             case 4:
                 printPoem(false);
-                x=0;
                 pressEnter();
                 break;
             default:
                 printf("Please enter a valid number\n");
-                x =0;
                 pressEnter();
                 break;
             }
+            x=0;
         }
         else{
             system("clear");
@@ -75,17 +82,28 @@ void Menu(){
     printf("Program finished successfully\n");
 }
 
-//Functions
+//Main Methods
 void addPoem(){
-    printf("Poem was added\n");
+    FILE *Poems = fopen(FILENAME,"a");
+    if(Poems == NULL){
+        printf("Poems file has been removed from the folder or is corrupt, please create a new file.\n");
+        exit(1);
+    }
+    printf("Please enter a new Poem:\n");
+    char newPoem[300];
+    fgets(newPoem,sizeof(newPoem),stdin);
+    while(strlen(newPoem) < 2){
+        system("clear");
+        printf("Please enter a valid Poem:\n");
+        fgets(newPoem,sizeof(newPoem),stdin);
+    }
+    fprintf(Poems,newPoem);
+    fclose(Poems);
+    printf("Poem was added successfully\n");
 }
 
 void removePoem(){
-    printf("Poem was removed\n");
-}
-
-void modifyPoem(){
-    FILE *Poems = fopen("Poems.txt","r");
+    FILE *Poems = fopen(FILENAME,"r");
     if(Poems == NULL){
         printf("Poems file has been removed from the folder or is corrupt, please create a new file.\n");
         exit(1);
@@ -94,11 +112,63 @@ void modifyPoem(){
     //it means the file is empty, therefore no modifications can be done
     fseek(Poems, 0, SEEK_END);
     long size = ftell(Poems);
-    fclose(Poems);
+
+    if(size == 0){
+        printf("The file has no Poems, please add a Poem first to delete it.\n"); 
+    }
+    else{
+        //Set the pointer of the file back to the beginning
+        fseek(Poems, 0,SEEK_SET);
+        int x;
+        char input[20];
+        printf("These are the current poems in the file:\n");
+        int cnt = printPoem(true);
+        printf("Please enter a number to delete the corresponding poem:\n");
+        fgets(input,sizeof(input),stdin);
+
+        while( !(x = atoi(input)) || (x <= 0 || x > cnt)){
+            printf("Please enter a valid number:\n");
+            fgets(input,sizeof(input),stdin);
+        }
+        char buffer[MAX_BUFFER];
+        FILE *tempF = fopen("temp.txt","w");
+        if(tempF == NULL){
+            printf("Error while opening temp file\n");
+            exit(1);
+        }
+        bool reading = true;
+        int current =1;
+        while (fgets(buffer, sizeof(buffer), Poems) != NULL) {
+            if(current != x){
+                fprintf(tempF, buffer);
+            }
+            current++;
+        }
+        fclose(tempF);
+        fclose(Poems);
+        remove(FILENAME);
+        rename("temp.txt", FILENAME);
+        printf("Poem was removed successfully\n");
+    }
+}
+
+void modifyPoem(){
+    FILE *Poems = fopen(FILENAME,"r");
+    if(Poems == NULL){
+        printf("Poems file has been removed from the folder or is corrupt, please create a new file.\n");
+        exit(1);
+    }
+    //We check where is the pointer of the file located, if it's located at the beggining of the file
+    //it means the file is empty, therefore no modifications can be done
+    fseek(Poems, 0, SEEK_END);
+    long size = ftell(Poems);
+
     if(size == 0){
         printf("The file has no Poems, please add a Poem first to modify it.\n"); 
     }
     else{
+        //Set the pointer of the file back to the beginning
+        fseek(Poems, 0,SEEK_SET);
         int x;
         char input[20];
         printf("These are the current poems in the file:\n");
@@ -110,31 +180,43 @@ void modifyPoem(){
             printf("Please enter a valid number:\n");
             fgets(input,sizeof(input),stdin);
         }
-
-        FILE *Poems = fopen("Poems.txt","r+");
-        fseek(Poems, 0, SEEK_SET);
         char buffer[MAX_BUFFER];
-        int current = 1;
-
-        while (fgets(buffer, sizeof(buffer), Poems) != NULL) {
-        if (current == x) {
-            printf("Please enter a new poem\n");
-            char newPoem[MAX_BUFFER];
-            fgets(newPoem, sizeof(newPoem), stdin);
-            //Moving back the pointer of the file at the begginning of the line
-            fseek(Poems, -strlen(buffer), SEEK_CUR);
-            fputs(buffer, Poems);
-            fclose(Poems);
-            break; 
+        printf("Please enter a new Poem:\n");
+        char newPoem[300];
+        fgets(newPoem,sizeof(newPoem),stdin);
+        while(strlen(newPoem) < 2){
+            printf("Please enter a valid Poem:\n");
+            fgets(newPoem,sizeof(newPoem),stdin);
         }
-        current++;
-        printf("this cnt: %d\n", cnt);
-        printf("this current: %d\n", current);
-        }   
+
+        FILE *tempF = fopen("temp.txt","w");
+        if(tempF == NULL){
+            printf("Error while opening temp file\n");
+            exit(1);
+        }
+        bool reading = true;
+        int current =1;
+        while (fgets(buffer, sizeof(buffer), Poems) != NULL) {
+            if(current == x){
+                fprintf(tempF, newPoem);
+            }
+            else{
+                fprintf(tempF,buffer);
+            }
+            current++;
+        }
+        fclose(tempF);
+        fclose(Poems);
+        remove("FILENAME");
+        rename("temp.txt", FILENAME);
+        printf("Poem was modifed successfuly\n");
     }
 }
+
+//This method takes a boolean to print or not the enumaration of the Lines and it returns an int to return
+//the amount of lines in the file
 int printPoem(bool number){
-    FILE *Poems = fopen("Poems.txt","r");
+    FILE *Poems = fopen(FILENAME,"r");
     char buffer[MAX_BUFFER];
     int cnt = 0;
     if(Poems == NULL){
@@ -165,9 +247,10 @@ int printPoem(bool number){
     fclose(Poems);
     return cnt;
 }
+
 //Complementary Methods
 void pressEnter() {
-    printf("Press Enter to continue...");
+    printf("Press Enter to continue...\n");
     while (getchar() != '\n');
     system("clear");
 }
