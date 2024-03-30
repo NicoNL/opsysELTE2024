@@ -25,17 +25,15 @@ void Menu(){
     FILE *Poems = fopen(FILENAME,"r");
     if(Poems == NULL){
         printf("The file 'Poems.txt' is not in this folder, a new empty 'Poems.txt' file will be created\n");
-        FILE *Poems = fopen(FILENAME,"w");
-        if(Poems == NULL){
+        FILE *newPoems = fopen(FILENAME,"w");
+        if(newPoems == NULL){
             printf("Error while opening file\n");
             exit(1);
         }
-        fclose(Poems);
+        fclose(newPoems);
         pressEnter();
-    }else{
-        fclose(Poems);
     }
-
+    fclose(Poems);
     do{
         system("clear");
         printf("Welcome to the Watering Poems Manager\nPlease enter a number to choose the corresponding option:\n");
@@ -181,6 +179,7 @@ void modifyPoem(){
             fgets(input,sizeof(input),stdin);
         }
         char buffer[MAX_BUFFER];
+        system("clear");
         printf("Please enter a new Poem:\n");
         char newPoem[300];
         fgets(newPoem,sizeof(newPoem),stdin);
