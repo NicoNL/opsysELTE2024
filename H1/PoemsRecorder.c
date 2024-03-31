@@ -21,7 +21,7 @@ int main(){
 //Program Menu
 void Menu(){
     int x = 0;
-    char input[20];
+    char input[30];
     FILE *Poems = fopen(FILENAME,"r");
     if(Poems == NULL){
         printf("The file 'Poems.txt' is not in this folder, a new empty 'Poems.txt' file will be created\n");
